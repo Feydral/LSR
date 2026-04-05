@@ -21,10 +21,10 @@ impl RenderTarget {
     }
 
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Float4, depth: f32) {
-        
+
     }
 
-    pub fn get_pixel_color(&self, x: u32, y: u32) -> Float4 {
+    pub fn get_pixel_color(&self, x: u32, y: u32) -> Float3 {
 
     }
     
