@@ -60,7 +60,8 @@ impl RenderTarget {
     }
     
     pub fn get_pixel_depth(&self, x: u32, y: u32) -> f32 {
-
+        let index = mathi::xy_to_index(x, y, self.width, self.height) as usize;
+        self.depth_buffer[index]
     }
 
     pub fn clear(&mut self, color: Float4) {
