@@ -65,7 +65,8 @@ impl RenderTarget {
     }
 
     pub fn clear(&mut self, color: Float4) {
-        
+        self.color_buffer.fill(color);
+        self.depth_buffer.fill(f32::INFINITY);
     }
 
     pub fn width(&self) -> u32 {
