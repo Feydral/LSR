@@ -54,8 +54,9 @@ impl RenderTarget {
         self.color_buffer[index] = out;
     }
 
-    pub fn get_pixel_color(&self, x: u32, y: u32) -> Float3 {
-
+    pub fn get_pixel_color(&self, x: u32, y: u32) -> Float4 {
+        let index = mathi::xy_to_index(x, y, self.width, self.height) as usize;
+        self.color_buffer[index]
     }
     
     pub fn get_pixel_depth(&self, x: u32, y: u32) -> f32 {
