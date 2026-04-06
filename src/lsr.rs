@@ -20,7 +20,7 @@ pub fn draw_indexed(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[
 
 }
 
-fn rasterize_triangle(target: &mut RenderTarget,fshader: &mut impl FragmentShader, v0: (Float4, Float2, Float3), v1: (Float4, Float2, Float3), v2: (Float4, Float2, Float3)) {
+fn rasterize_triangle(target: &mut RenderTarget, fshader: &mut impl FragmentShader, v0: (Float4, Float2, Float3), v1: (Float4, Float2, Float3), v2: (Float4, Float2, Float3)) {
     let w = target.width() as f32;
     let h = target.height() as f32;
 
@@ -72,5 +72,34 @@ fn rasterize_triangle(target: &mut RenderTarget,fshader: &mut impl FragmentShade
             let color = fshader.fragment(p, depth, uv, normal);
             target.set_pixel(x as u32, y as u32, color, depth);
         }
+    }
+}
+
+fn draw_line(target: &mut RenderTarget, s0: Float2, s1: Float2) {
+    let x0 = s0.x.round() as i32;
+    let y0 = s0.y.round() as i32;
+    let x1 = s1.x.round() as i32;
+    let y1 = s1.y.round() as i32;
+
+    let dx = (x1 - x0).abs();
+    let dy = (y1 - y0).abs();
+
+    let sx = if x0 < x1 { 1 } else { -1 };
+    let sy = if y0 < y1 { 1 } else { -1 };
+
+    let mut err = dx - dy;
+    let mut x = x0;
+    let mut y = y0;
+
+    loop {
+        if x >= 0 && y >= 0 && (x as u32) < target.width() && (y as u32) < target.height() {
+            target.set_pixel(x as u32, y as u32, Float4::new(1.0, 1.0, 1.0, 1.0), 1.0);
+        }
+
+        if x == x1 && y == y1 { break; }
+
+        let e2 = 2 * err;
+        if e2 > -dy { err -= dy; x += sx; }
+        if e2 <  dx { err += dx; y += sy; }
     }
 }
