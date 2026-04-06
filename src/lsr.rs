@@ -117,3 +117,7 @@ fn draw_point_to_target(target: &mut RenderTarget, screen_pos: Float2) {
         }
     }
 }
+
+fn interpolate_vertex(a: (Float4, Float2, Float3), b: (Float4, Float2, Float3), t: f32) -> (Float4, Float2, Float3) {
+    (mathf::lerp_float4(a.0, b.0, t), mathf::lerp_float2(a.1, b.1, t), mathf::lerp_float3(a.2, b.2, t).normalize())
+}

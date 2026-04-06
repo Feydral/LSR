@@ -108,6 +108,12 @@ pub fn lerp_float3(a: Float3, b: Float3, t: f32) -> Float3 {
 	a + (b - a) * t.clamp(0.0, 1.0)
 }
 
+/// Performs linear interpolation between two Float4 values based on a parameter t, which is clamped between 0.0 and 1.0.
+#[inline(always)]
+pub fn lerp_float4(a: Float4, b: Float4, t: f32) -> Float4 {
+	a + (b - a) * t.clamp(0.0, 1.0)
+}
+
 /// Maps a value from one range to another range using linear interpolation.
 #[inline(always)]
 pub fn remap(value: f32, from_min: f32, from_max: f32, to_min: f32, to_max: f32) -> f32 {
