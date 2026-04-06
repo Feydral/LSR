@@ -6,6 +6,8 @@ use crate::lsr::render_target::RenderTarget;
 use crate::math::mathf;
 use crate::math::numerics::{Float2, Float3, Float4};
 
+const NEAR_CLIP: f32 = 0.001;
+
 pub enum PrimitiveMode {
     Triangles,
     Lines,
@@ -118,6 +120,63 @@ fn draw_point_to_target(target: &mut RenderTarget, screen_pos: Float2) {
     }
 }
 
+fn clip_triangle(target: &mut RenderTarget, fshader: &mut impl FragmentShader, v0: (Float4, Float2, Float3), v1: (Float4, Float2, Float3), v2: (Float4, Float2, Float3)) {
+    let clip0 = v0.0.w <= NEAR_CLIP;
+    let clip1 = v1.0.w <= NEAR_CLIP;
+    let clip2 = v2.0.w <= NEAR_CLIP;
+    let clip_count = clip0 as u8 + clip1 as u8 + clip2 as u8;
+
+    match clip_count {
+        0 => rasterize_triangle_to_target(target, fshader, v0, v1, v2),
+        1 => {
+            let (vc, va, vb) = if clip0 { 
+                (v0, v1, v2) 
+            } else if clip1 { 
+                (v1, v2, v0) 
+            } else { 
+                (v2, v0, v1) 
+            };
+
+            let t_a = near_plane_intersection_t(vc.0.w, va.0.w);
+            let t_b = near_plane_intersection_t(vc.0.w, vb.0.w);
+
+            let new_a = interpolate_vertex(vc, va, t_a);
+            let new_b = interpolate_vertex(vc, vb, t_b);
+
+            rasterize_triangle_to_target(target, fshader, new_a, va, vb);
+            rasterize_triangle_to_target(target, fshader, new_a, vb, new_b);
+        }
+        2 => {
+            let (vk, va, vb) = if !clip0 { 
+                (v0, v1, v2) 
+            } else if !clip1 { 
+                (v1, v2, v0) 
+            } else { 
+                (v2, v0, v1) 
+            };
+
+            let t_a = near_plane_intersection_t(vk.0.w, va.0.w);
+            let t_b = near_plane_intersection_t(vk.0.w, vb.0.w);
+
+            rasterize_triangle_to_target(target, fshader, vk, interpolate_vertex(vk, va, t_a), interpolate_vertex(vk, vb, t_b));
+        }
+        3 => {}
+        _ => unreachable!()
+    }
+}
+
 fn interpolate_vertex(a: (Float4, Float2, Float3), b: (Float4, Float2, Float3), t: f32) -> (Float4, Float2, Float3) {
     (mathf::lerp_float4(a.0, b.0, t), mathf::lerp_float2(a.1, b.1, t), mathf::lerp_float3(a.2, b.2, t).normalize())
+}
+
+fn near_plane_intersection_t(a_w: f32, b_w: f32) -> f32 {
+    (NEAR_CLIP - a_w) / (b_w - a_w)
+}
+
+fn clip_to_screen(clip: Float4, w: f32, h: f32) -> Float2 {
+    let inv_w = 1.0 / clip.w;
+    Float2::new(
+        (clip.x * inv_w + 1.0) * 0.5 * w,
+        (1.0 - clip.y * inv_w) * 0.5 * h,
+    )
 }
