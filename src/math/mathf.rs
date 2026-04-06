@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::math::numerics::{float2::Float2, float3::Float3, float4::Float4};
+use crate::math::numerics::{Float2, Float3, Float4};
 
 /// Tests if a point p is inside the triangle defined by points a, b, and c. 
 /// If the point is inside the triangle, it also calculates the barycentric weights 

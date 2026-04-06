@@ -1,5 +1,5 @@
 use crate::math::mathi;
-use crate::math::numerics::float4::Float4;
+use crate::math::numerics::Float4;
 
 pub struct RenderTarget {
     color_buffer: Vec<Float4>,

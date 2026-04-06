@@ -3,7 +3,7 @@ pub mod render_target;
 
 use crate::lsr::shader::{FragmentShader, VertexShader};
 use crate::lsr::render_target::RenderTarget;
-use crate::math::numerics::{float2::Float2, float3::Float3};
+use crate::math::numerics::{Float2, Float3};
 
 pub enum PrimitiveMode {
     Triangles,

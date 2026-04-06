@@ -1,4 +1,4 @@
-use crate::math::numerics::{float2::Float2, float3::Float3, float4::Float4};
+use crate::math::numerics::{Float2, Float3, Float4};
 
 pub trait VertexShader {
     fn vertex(&mut self, position: Float3, uv: Float2, normal: Float3) -> (Float4, Float2, Float3);
