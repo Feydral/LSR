@@ -28,16 +28,33 @@ pub fn draw_arrays(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[F
             }
         }
         PrimitiveMode::Lines => {
-            let count = (vertices.len() / 2) * 2;
-            for i in (0..count).step_by(2) {
+            let count = (vertices.len() / 3) * 3;
+        
+            for i in (0..count).step_by(3) {
                 let v0 = vshader.vertex(vertices[i], uvs[i], normals[i]);
                 let v1 = vshader.vertex(vertices[i+1], uvs[i+1], normals[i+1]);
-
+                let v2 = vshader.vertex(vertices[i+2], uvs[i+2], normals[i+2]);
+            
+                if v0.0.w <= NEAR_CLIP && v1.0.w <= NEAR_CLIP && v2.0.w <= NEAR_CLIP {
+                    continue;
+                }
+            
                 if v0.0.w > NEAR_CLIP && v1.0.w > NEAR_CLIP {
                     let s0 = clip_to_screen(v0.0, target.width() as f32, target.height() as f32);
                     let s1 = clip_to_screen(v1.0, target.width() as f32, target.height() as f32);
-
                     draw_line_to_target(target, s0, s1);
+                }
+            
+                if v1.0.w > NEAR_CLIP && v2.0.w > NEAR_CLIP {
+                    let s1 = clip_to_screen(v1.0, target.width() as f32, target.height() as f32);
+                    let s2 = clip_to_screen(v2.0, target.width() as f32, target.height() as f32);
+                    draw_line_to_target(target, s1, s2);
+                }
+            
+                if v2.0.w > NEAR_CLIP && v0.0.w > NEAR_CLIP {
+                    let s2 = clip_to_screen(v2.0, target.width() as f32, target.height() as f32);
+                    let s0 = clip_to_screen(v0.0, target.width() as f32, target.height() as f32);
+                    draw_line_to_target(target, s2, s0);
                 }
             }
         }
