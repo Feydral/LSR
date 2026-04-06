@@ -67,12 +67,9 @@ pub fn draw_arrays(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[F
 
                     let x = s.x.round() as i32;
                     let y = s.y.round() as i32;
-                    let depth = clip.w;
 
-                    if (x >= 0 && y >= 0 && (x as u32) < target.width() && (y as u32) < target.height()) && depth < target.get_pixel_depth(x as u32, y as u32)
-                    {
-                        let color = fshader.fragment(s, depth, uv, normal);
-                        target.set_pixel(x as u32, y as u32, color, depth);
+                    if x >= 0 && y >= 0 && (x as u32) < target.width() && (y as u32) < target.height()  {
+                        target.set_pixel(x as u32, y as u32, Float4::new(1.0, 1.0, 1.0, 1.0), 1.0);
                     }
                 }
             }
