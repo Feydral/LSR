@@ -20,7 +20,7 @@ pub fn draw_indexed(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[
 
 }
 
-fn rasterize_triangle(target: &mut RenderTarget, fshader: &mut impl FragmentShader, v0: (Float4, Float2, Float3), v1: (Float4, Float2, Float3), v2: (Float4, Float2, Float3)) {
+fn rasterize_triangle_to_target(target: &mut RenderTarget, fshader: &mut impl FragmentShader, v0: (Float4, Float2, Float3), v1: (Float4, Float2, Float3), v2: (Float4, Float2, Float3)) {
     let w = target.width() as f32;
     let h = target.height() as f32;
 
@@ -55,9 +55,7 @@ fn rasterize_triangle(target: &mut RenderTarget, fshader: &mut impl FragmentShad
             let mut wb = 0.0;
             let mut wc = 0.0;
 
-            if !mathf::point_in_triangle(s0, s1, s2, p, &mut wa, &mut wb, &mut wc) {
-                continue;
-            }
+            if !mathf::point_in_triangle(s0, s1, s2, p, &mut wa, &mut wb, &mut wc) { continue; }
 
             let inv_w_interp = wa * inv_w0 + wb * inv_w1 + wc * inv_w2;
             let depth = 1.0 / inv_w_interp;
@@ -67,7 +65,7 @@ fn rasterize_triangle(target: &mut RenderTarget, fshader: &mut impl FragmentShad
             }
 
             let uv     = (uv0 * wa + uv1 * wb + uv2 * wc) * depth;
-            let normal = (n0  * wa + n1  * wb + n2  * wc) * depth;
+            let normal = (n0 * wa + n1 * wb + n2 * wc) * depth;
 
             let color = fshader.fragment(p, depth, uv, normal);
             target.set_pixel(x as u32, y as u32, color, depth);
@@ -75,7 +73,7 @@ fn rasterize_triangle(target: &mut RenderTarget, fshader: &mut impl FragmentShad
     }
 }
 
-fn draw_line(target: &mut RenderTarget, s0: Float2, s1: Float2) {
+fn draw_line_to_target(target: &mut RenderTarget, s0: Float2, s1: Float2) {
     let x0 = s0.x.round() as i32;
     let y0 = s0.y.round() as i32;
     let x1 = s1.x.round() as i32;
