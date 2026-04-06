@@ -64,7 +64,7 @@ fn rasterize_triangle_to_target(target: &mut RenderTarget, fshader: &mut impl Fr
                 continue;
             }
 
-            let uv     = (uv0 * wa + uv1 * wb + uv2 * wc) * depth;
+            let uv = (uv0 * wa + uv1 * wb + uv2 * wc) * depth;
             let normal = (n0 * wa + n1 * wb + n2 * wc) * depth;
 
             let color = fshader.fragment(p, depth, uv, normal);
@@ -98,6 +98,22 @@ fn draw_line_to_target(target: &mut RenderTarget, s0: Float2, s1: Float2) {
 
         let e2 = 2 * err;
         if e2 > -dy { err -= dy; x += sx; }
-        if e2 <  dx { err += dx; y += sy; }
+        if e2 < dx { err += dx; y += sy; }
+    }
+}
+
+fn draw_point_to_target(target: &mut RenderTarget, screen_pos: Float2) {
+    let cx = screen_pos.x.round() as i32;
+    let cy = screen_pos.y.round() as i32;
+
+    for oy in -1..=1 {
+        for ox in -1..=1 {
+            let x = cx + ox;
+            let y = cy + oy;
+
+            if x >= 0 && y >= 0 && (x as u32) < target.width() && (y as u32) < target.height() {
+                target.set_pixel(x as u32, y as u32, Float4::new(1.0, 1.0, 1.0, 1.0), 1.0);
+            }
+        }
     }
 }
