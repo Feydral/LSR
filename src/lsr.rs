@@ -8,17 +8,63 @@ use crate::math::numerics::{Float2, Float3, Float4};
 
 const NEAR_CLIP: f32 = 0.001;
 
+#[allow(dead_code)]
 pub enum PrimitiveMode {
     Triangles,
     Lines,
     Points,
 }
 
-pub fn draw_arrays(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[Float3], uvs: &[Float2], normals: &[Float3], vshader: &impl VertexShader, fshader: &impl FragmentShader) {
+#[allow(dead_code)]
+pub fn draw_arrays(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[Float3], uvs: &[Float2], normals: &[Float3], vshader: &mut impl VertexShader, fshader: &mut impl FragmentShader) {
+        match mode {
+        PrimitiveMode::Triangles => {
+            let count = (vertices.len() / 3) * 3;
+            for i in (0..count).step_by(3) {
+                let v0 = vshader.vertex(vertices[i], uvs[i], normals[i]);
+                let v1 = vshader.vertex(vertices[i+1], uvs[i+1], normals[i+1]);
+                let v2 = vshader.vertex(vertices[i+2], uvs[i+2], normals[i+2]);
+                clip_triangle(target, fshader, v0, v1, v2);
+            }
+        }
+        PrimitiveMode::Lines => {
+            let count = (vertices.len() / 2) * 2;
+            for i in (0..count).step_by(2) {
+                let v0 = vshader.vertex(vertices[i], uvs[i], normals[i]);
+                let v1 = vshader.vertex(vertices[i+1], uvs[i+1], normals[i+1]);
 
+                if v0.0.w > NEAR_CLIP && v1.0.w > NEAR_CLIP {
+                    let s0 = clip_to_screen(v0.0, target.width() as f32, target.height() as f32);
+                    let s1 = clip_to_screen(v1.0, target.width() as f32, target.height() as f32);
+
+                    draw_line_to_target(target, s0, s1);
+                }
+            }
+        }
+        PrimitiveMode::Points => {
+            for i in 0..vertices.len() {
+                let (clip, uv, normal) = vshader.vertex(vertices[i], uvs[i], normals[i]);
+
+                if clip.w > NEAR_CLIP {
+                    let s = clip_to_screen(clip, target.width() as f32, target.height() as f32);
+
+                    let x = s.x.round() as i32;
+                    let y = s.y.round() as i32;
+                    let depth = clip.w;
+
+                    if (x >= 0 && y >= 0 && (x as u32) < target.width() && (y as u32) < target.height()) && depth < target.get_pixel_depth(x as u32, y as u32)
+                    {
+                        let color = fshader.fragment(s, depth, uv, normal);
+                        target.set_pixel(x as u32, y as u32, color, depth);
+                    }
+                }
+            }
+        }
+    }
 }
 
-pub fn draw_indexed(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[Float3], indices: &[u32], uvs: &[Float2], normals: &[Float3], vshader: &impl VertexShader, fshader: &impl FragmentShader) {
+#[allow(dead_code)]
+pub fn draw_indexed(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[Float3], indices: &[u32], uvs: &[Float2], normals: &[Float3], vshader: &mut impl VertexShader, fshader: &mut impl FragmentShader) {
 
 }
 
