@@ -226,22 +226,6 @@ fn draw_line_to_target(target: &mut RenderTarget, s0: Float2, s1: Float2) {
     }
 }
 
-fn draw_point_to_target(target: &mut RenderTarget, screen_pos: Float2) {
-    let cx = screen_pos.x.round() as i32;
-    let cy = screen_pos.y.round() as i32;
-
-    for oy in -1..=1 {
-        for ox in -1..=1 {
-            let x = cx + ox;
-            let y = cy + oy;
-
-            if x >= 0 && y >= 0 && (x as u32) < target.width() && (y as u32) < target.height() {
-                target.set_pixel(x as u32, y as u32, Float4::new(1.0, 1.0, 1.0, 1.0), 1.0);
-            }
-        }
-    }
-}
-
 fn clip_triangle(target: &mut RenderTarget, fshader: &mut impl FragmentShader, v0: (Float4, Float2, Float3), v1: (Float4, Float2, Float3), v2: (Float4, Float2, Float3)) {
     let clip0 = v0.0.w <= NEAR_CLIP;
     let clip1 = v1.0.w <= NEAR_CLIP;
