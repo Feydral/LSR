@@ -60,7 +60,7 @@ pub fn draw_arrays(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[F
         }
         PrimitiveMode::Points => {
             for i in 0..vertices.len() {
-                let (clip, uv, normal) = vshader.vertex(vertices[i], uvs[i], normals[i]);
+                let (clip, _, _) = vshader.vertex(vertices[i], uvs[i], normals[i]);
 
                 if clip.w > NEAR_CLIP {
                     let s = clip_to_screen(clip, target.width() as f32, target.height() as f32);
@@ -79,7 +79,69 @@ pub fn draw_arrays(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[F
 
 #[allow(dead_code)]
 pub fn draw_indexed(target: &mut RenderTarget, mode: PrimitiveMode, vertices: &[Float3], indices: &[u32], uvs: &[Float2], normals: &[Float3], vshader: &mut impl VertexShader, fshader: &mut impl FragmentShader) {
+    match mode {
+        PrimitiveMode::Triangles => {
+            let count = (indices.len() / 3) * 3;
+            for i in (0..count).step_by(3) {
+                let (i0, i1, i2) = (indices[i] as usize, indices[i+1] as usize, indices[i+2] as usize);
 
+                let v0 = vshader.vertex(vertices[i0], uvs[i0], normals[i0]);
+                let v1 = vshader.vertex(vertices[i1], uvs[i1], normals[i1]);
+                let v2 = vshader.vertex(vertices[i2], uvs[i2], normals[i2]);
+
+                clip_triangle(target, fshader, v0, v1, v2);
+            }
+        }
+        PrimitiveMode::Lines => {
+            let count = (indices.len() / 3) * 3;
+
+            for i in (0..count).step_by(3) {
+                let (i0, i1, i2) = (indices[i] as usize, indices[i+1] as usize, indices[i+2] as usize);
+            
+                let v0 = vshader.vertex(vertices[i0], uvs[i0], normals[i0]);
+                let v1 = vshader.vertex(vertices[i1], uvs[i1], normals[i1]);
+                let v2 = vshader.vertex(vertices[i2], uvs[i2], normals[i2]);
+            
+                if v0.0.w <= NEAR_CLIP && v1.0.w <= NEAR_CLIP && v2.0.w <= NEAR_CLIP { continue; }
+            
+                if v0.0.w > NEAR_CLIP && v1.0.w > NEAR_CLIP {
+                    let s0 = clip_to_screen(v0.0, target.width() as f32, target.height() as f32);
+                    let s1 = clip_to_screen(v1.0, target.width() as f32, target.height() as f32);
+                    draw_line_to_target(target, s0, s1);
+                }
+            
+                if v1.0.w > NEAR_CLIP && v2.0.w > NEAR_CLIP {
+                    let s1 = clip_to_screen(v1.0, target.width() as f32, target.height() as f32);
+                    let s2 = clip_to_screen(v2.0, target.width() as f32, target.height() as f32);
+                    draw_line_to_target(target, s1, s2);
+                }
+            
+                if v2.0.w > NEAR_CLIP && v0.0.w > NEAR_CLIP {
+                    let s2 = clip_to_screen(v2.0, target.width() as f32, target.height() as f32);
+                    let s0 = clip_to_screen(v0.0, target.width() as f32, target.height() as f32);
+                    draw_line_to_target(target, s2, s0);
+                }
+            }
+        }
+        PrimitiveMode::Points => {
+            for i in 0..indices.len() {
+                let idx = indices[i] as usize;
+
+                let (clip, _, _) = vshader.vertex(vertices[idx], uvs[idx], normals[idx]);
+
+                if clip.w > NEAR_CLIP {
+                    let s = clip_to_screen(clip, target.width() as f32, target.height() as f32);
+
+                    let x = s.x.round() as i32;
+                    let y = s.y.round() as i32;
+
+                    if x >= 0 && y >= 0 && (x as u32) < target.width() && (y as u32) < target.height()  {
+                        target.set_pixel(x as u32, y as u32, Float4::new(1.0, 1.0, 1.0, 1.0), 1.0);
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn rasterize_triangle_to_target(target: &mut RenderTarget, fshader: &mut impl FragmentShader, v0: (Float4, Float2, Float3), v1: (Float4, Float2, Float3), v2: (Float4, Float2, Float3)) {
